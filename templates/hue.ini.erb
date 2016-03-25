@@ -1,0 +1,34 @@
+<%
+props = scope.lookupvar('hue::_properties')
+
+last_sections = []
+last_section = ''
+
+props.keys.sort.each do |p|
+  sections = p.split(/\./)
+  pname = sections.pop
+  section = sections.join('.')
+  value = props[p]
+
+  if section != last_section then
+    level=0
+    # skip, what's the same
+    while sections[level] == last_sections[level] do
+      level = level + 1
+    end
+    # generate new sections
+    while level < sections.length do
+      line = "%s%s%s" % ['[' * (level + 1), sections[level], ']' * (level + 1)]
+-%>
+
+<%= line %>
+
+<%
+      level = level + 1
+    end
+    last_section = section
+    last_sections = sections
+  end
+-%>
+<%= pname -%>=<%= value %>
+<% end %>

@@ -1,0 +1,70 @@
+{
+  "name": "cesnet-hue",
+  "version": "0.1.0",
+  "author": "cesnet",
+  "summary": "Apache Hue - user interface for Hadoop",
+  "license": "MIT",
+  "source": "https://github.com/MetaCenterCloudPuppet/cesnet-hue.git",
+  "project_page": "https://github.com/MetaCenterCloudPuppet/cesnet-hue",
+  "issues_url": "https://github.com/MetaCenterCloudPuppet/cesnet-hue/issues",
+  "tags": [
+    "hadoop",
+    "hue",
+    "web interface",
+  ],
+  "dependencies": [
+    {
+      "name": "puppetlabs/stdlib",
+      "version_requirement": ">= 1.0.0 < 5.0.0"
+    },
+    {
+      "name": "cesnet/hadoop_lib",
+      "version_requirement": "< 1.0.0"
+    }
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "6",
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "6",
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Scientific",
+      "operatingsystemrelease": [
+        "6",
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "14.04"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "pe",
+      "version_requirement": ">= 3.4.0"
+    },
+    {
+      "name": "puppet",
+      "version_requirement": ">= 3.4.0"
+    }
+  ]
+}
