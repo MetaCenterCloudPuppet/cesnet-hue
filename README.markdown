@@ -83,6 +83,10 @@ Hive Server2 hostname. Default: undef.
 
 Enable support for https. Default: false.
 
+####`oozie_hostname`
+
+Oozie server hostname. Default: undef.
+
 ####`properties`
 
 "Raw" properties for hadoop cluster. Default: undef.
@@ -96,6 +100,24 @@ Hue package name. Default: 'hue'.
 ####`service_name`
 
 Hue service name. Default: 'hue'.
+
+####`yarn_hostname`
+
+Hadoop YARN Resourcemanager hostname. Default: undef.
+
+####`yarn_hostname2`
+
+Hadoop YARN Second Resourcemanager hostname, when high availability is used. Default: undef.
+
+####`zookeeper_hostnames`
+
+List of zookeeper hostnames. Default: [].
+
+####`zookeeper_rest_hostname`
+
+Zookeeper REST server hostname. Default: undef.
+
+Not available in Cloudera. Sources are available at [https://github.com/apache/zookeeper](https://github.com/apache/zookeeper/tree/trunk/src/contrib/rest).
 
 ## Limitations
 

@@ -3,21 +3,35 @@
 # The main configuration class.
 #
 class hue (
-  $alternatives = '::default',
-  $defaultFS = undef,
-  $group = 'users',
   $hdfs_hostname,
   $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
+  $oozie_hostname = undef,
+  $yarn_hostname = undef,
+  $yarn_hostname2 = undef,
+  $zookeeper_hostnames = [],
+  $zookeeper_rest_hostname = undef,
+  $alternatives = '::default',
+  $defaultFS = undef,
+  $group = 'users',
   $https = false,
   $package_name = $::hue::params::package_name,
   $service_name = $::hue::params::service_name,
   $properties = undef,
   $secret = '',
 ) inherits ::hue::params {
+  include ::stdlib
+
+  validate_array($zookeeper_hostnames)
 
   if !$secret or $secret == '' {
     warning('$secret parameter is empty, we recommend to set any value')
+  }
+
+  if $https {
+    $security = 'True'
+  } else {
+    $security = 'False'
   }
 
   $_defaultfs = pick($defaultFS, "hdfs://${hdfs_hostname}:8020")
@@ -28,7 +42,6 @@ class hue (
     'desktop.secret_key' => $secret,
     'hadoop.hdfs_clusters.default.fs_defaultfs' => $_defaultfs,
     'hadoop.mapred_clusters.default.submit_to' => 'False',
-    'hadoop.yarn_clusters.default.submit_to' => 'True',
   }
 
   if $httpfs_hostname and !empty($httpfs_hostname) {
@@ -55,7 +68,73 @@ class hue (
     $hive_properties = {}
   }
 
-  $_properties = merge($base_properties, $hdfs_properties, $hive_properties, $properties)
+  if $oozie_hostname and !empty($oozie_hostname) {
+    if $https {
+      $oozie_url = "https://${oozie_hostname}:11443/oozie"
+    } else {
+      $oozie_url = "http://${oozie_hostname}:11000/oozie"
+    }
+    $oozie_properties = {
+      'liboozie.oozie_url' => $oozie_url,
+      'liboozie.security_enabled' => $security,
+    }
+  } else {
+    $oozie_properties = {}
+  }
+
+  if $yarn_hostname and !empty($yarn_hostname) {
+    if $https {
+      $jhs_url = "https://${yarn_hostname}:19890"
+      $rm1_url = "https://${yarn_hostname}:8090"
+    } else {
+      $jhs_url = "http://${yarn_hostname}:19888"
+      $rm1_url = "http://${yarn_hostname}:8088"
+    }
+    $yarn_base_properties = {
+      'hadoop.yarn_clusters.default.history_server_api_url' => $jhs_url,
+      'hadoop.yarn_clusters.default.proxy_api_url' => $rm1_url,
+      'hadoop.yarn_clusters.default.resourcemanager_api_url' => $rm1_url,
+      'hadoop.yarn_clusters.default.resourcemanager_host' => $yarn_hostname,
+      'hadoop.yarn_clusters.default.security_enabled' => $security,
+      'hadoop.yarn_clusters.default.submit_to' => 'True',
+    }
+    if $yarn_hostname2 and !empty($yarn_hostname2) {
+      if $https {
+        $rm2_url = "https://${yarn_hostname2}:8090"
+      } else {
+        $rm2_url = "http://${yarn_hostname2}:8088"
+      }
+      $yarn_ha_properties = {
+        'hadoop.yarn_clusters.default.logical_name' => 'rm1',
+        'hadoop.yarn_clusters.ha.logical_name' => 'rm2',
+        'hadoop.yarn_clusters.ha.proxy_api_url' => $rm2_url,
+        'hadoop.yarn_clusters.ha.resourcemanager_api_url' => $rm2_url,
+      }
+    }
+
+    $yarn_properties = merge($yarn_base_properties, $yarn_ha_properties)
+  } else {
+    $yarn_properties = {}
+  }
+
+  if $zookeeper_hostnames and !empty($zookeeper_hostnames) {
+    $zoo_base_properties = {
+      'zookeeper.clusters.default.host_ports' => join($zookeeper_hostnames, ':2181,') + ':2181',
+    }
+    if $zookeeper_rest_hostname and !empty($zookeeper_rest_hostname) {
+      $zoo_rest_properties = {
+        'zookeeper.clusters.default.rest_url' => "http://${zookeeper_rest_hostname}:9998"
+      }
+    } else  {
+      $zoo_rest_properties = {}
+    }
+
+    $zoo_properties = merge($zoo_base_properties, $zoo_rest_properties)
+  } else {
+    $zoo_properties = {}
+  }
+
+  $_properties = merge($base_properties, $hdfs_properties, $hive_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
   class { '::hue::install': } ->
   class { '::hue::config': } ~>
