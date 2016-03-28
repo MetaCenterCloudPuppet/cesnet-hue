@@ -1,34 +1,48 @@
 <%
 props = scope.lookupvar('hue::_properties')
 
-last_sections = []
-last_section = ''
-
-props.keys.sort.each do |p|
-  sections = p.split(/\./)
+# analyze sections
+hue = {}
+props.keys.each do |k|
+  sections = k.split(/\./)
   pname = sections.pop
   section = sections.join('.')
-  value = props[p]
+  value = props[k]
 
-  if section != last_section then
-    level=0
-    # skip, what's the same
-    while sections[level] == last_sections[level] do
-      level = level + 1
-    end
-    # generate new sections
-    while level < sections.length do
-      line = "%s%s%s" % ['[' * (level + 1), sections[level], ']' * (level + 1)]
+  if not hue.has_key?(section) then
+    hue[section] = {}
+  end
+  hue[section][pname] = value
+end
+
+# generate
+last_section = ''
+hue.keys.sort.each do |section|
+  last_sections = last_section.split(/\./)
+  sections = section.split(/\./)
+  level=0
+
+  # skip, what's the same
+  while sections[level] == last_sections[level] do
+    level = level + 1
+  end
+
+  # generate new sections
+  while level < sections.length do
+    line = "%s%s%s%s" % [' ' * level * 2, '[' * (level + 1), sections[level], ']' * (level + 1)]
 -%>
-
 <%= line %>
 
 <%
-      level = level + 1
-    end
-    last_section = section
-    last_sections = sections
+    level = level + 1
   end
+
+  last_section = section
+
+  hue[section].keys.each do |k|
+    line = "%s%s=%s" % [' ' * level * 2, k, hue[section][k]]
 -%>
-<%= pname -%>=<%= value %>
-<% end %>
+<%= line %>
+<% end -%>
+
+<% end -%>
