@@ -8,7 +8,6 @@ group :test do
   gem "puppetlabs_spec_helper"
   gem "metadata-json-lint"
   gem "rspec-puppet-facts"
-  gem 'rubocop', '0.33.0'
   gem 'simplecov', '>= 0.11.0'
   gem 'simplecov-console'
 
