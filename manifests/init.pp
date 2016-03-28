@@ -6,24 +6,38 @@ class hue (
   $alternatives = '::default',
   $defaultFS = undef,
   $hdfs_hostname,
-  $hdfs_enable = true,
+  $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
-  $httpfs_enable = false,
   $https = false,
   $package_name = $::hue::params::package_name,
   $service_name = $::hue::params::service_name,
   $properties = undef,
+  $secret = '',
 ) inherits ::hue::params {
 
-  if !$hdfs_enable and !$httpfs_enable {
-    err('WebHDFS ($hdfs_enable) or HTTPFS ($httpfs_enable) needs to be enabled')
+  if !$secret or $secret == '' {
+    warning('$secret parameter is empty, we recommend to set any value')
   }
 
-  $_defaultfs = pick("hdfs://${hdfs_hostname}:8020", $defaultFS)
+  $_defaultfs = pick($defaultFS, "hdfs://${hdfs_hostname}:8020")
   $base_properties = {
+    # Cloudera default
+    'desktop.database.engine' => 'sqlite3',
+    # Cloudera default
+    'desktop.database.name' => '/var/lib/hue/desktop.db',
+    'desktop.secret_key' => $secret,
     'hadoop.hdfs_clusters.default.fs_defaultfs' => $_defaultfs,
+    # disable JobTracker
+    'hadoop.mapred_clusters.default.submit_to' => 'False',
+    # and enable YARN
+    'hadoop.yarn_clusters.default.submit_to' => 'True',
   }
-  if $hdfs_enable {
+
+  if $httpfs_hostname and !empty($httpfs_hostname) {
+    $hdfs_properties = {
+      'hadoop.hdfs_clusters.default.webhdfs_url' => "http://${httpfs_hostname}:14000/webhdfs/v1/",
+    }
+  } else {
     if $https {
       $hdfs_properties = {
         'hadoop.hdfs_clusters.default.webhdfs_url' => "https://${hdfs_hostname}:50470/webhdfs/v1/",
@@ -32,11 +46,6 @@ class hue (
       $hdfs_properties = {
         'hadoop.hdfs_clusters.default.webhdfs_url' => "http://${hdfs_hostname}:50070/webhdfs/v1/",
       }
-    }
-  } else {
-    # TODO: https?
-    $hdfs_properties = {
-      'hadoop.hdfs_clusters.default.webhdfs_url' => "http://${hdfs_hostname}:14000/webhdfs/v1/",
     }
   }
 
@@ -48,7 +57,7 @@ class hue (
     $hive_properties = {}
   }
 
-  $_properties = merge($hdfs_properties, $hive_properties, $properties)
+  $_properties = merge($base_properties, $hdfs_properties, $hive_properties, $properties)
 
   class { '::hue::install': } ->
   class { '::hue::config': } ~>

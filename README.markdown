@@ -59,19 +59,17 @@ It can be used only when supported (for example with Cloudera distribution).
 
 ####`defaultFS`
 
-Default: "hdfs://${hdfs\_hostname}:8020".
+Default: undef ("hdfs://${hdfs\_hostname}:8020").
 
 ####`hdfs_hostname`
 
 Hadoop HDFS hostname. Required.
 
-####`hdfs_enable`
+####`httpfs_hostname`
 
-Default: true.
+HTTPFS proxy hostname, if available. Default: true.
 
-####`httpfs_enable`
-
-Default: false.
+It is required with HDFS High Availability. It should be the same machine as Apache Hue.
 
 ####`hive_server2_hostname`
 
