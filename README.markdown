@@ -61,6 +61,10 @@ It can be used only when supported (for example with Cloudera distribution).
 
 Default: undef ("hdfs://${hdfs\_hostname}:8020").
 
+####`group`
+
+Default user group for newly created users. Default: 'users'.
+
 ####`hdfs_hostname`
 
 Hadoop HDFS hostname. Required.

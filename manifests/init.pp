@@ -5,6 +5,7 @@
 class hue (
   $alternatives = '::default',
   $defaultFS = undef,
+  $group = 'users',
   $hdfs_hostname,
   $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
@@ -21,15 +22,12 @@ class hue (
 
   $_defaultfs = pick($defaultFS, "hdfs://${hdfs_hostname}:8020")
   $base_properties = {
-    # Cloudera default
+    'useradmin.default_user_group' => $group,
     'desktop.database.engine' => 'sqlite3',
-    # Cloudera default
     'desktop.database.name' => '/var/lib/hue/desktop.db',
     'desktop.secret_key' => $secret,
     'hadoop.hdfs_clusters.default.fs_defaultfs' => $_defaultfs,
-    # disable JobTracker
     'hadoop.mapred_clusters.default.submit_to' => 'False',
-    # and enable YARN
     'hadoop.yarn_clusters.default.submit_to' => 'True',
   }
 
