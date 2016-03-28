@@ -10,7 +10,7 @@
   "tags": [
     "hadoop",
     "hue",
-    "web interface",
+    "web interface"
   ],
   "dependencies": [
     {
