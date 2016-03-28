@@ -7,6 +7,11 @@ describe 'hue' do
         let(:facts) do
           facts
         end
+        let(:params) do
+          {
+            :hdfs_hostname => 'localhost',
+          }
+        end
 
         context "hue class without any parameters" do
           it { is_expected.to compile.with_all_deps }
@@ -31,6 +36,11 @@ describe 'hue' do
         {
           :osfamily        => 'Solaris',
           :operatingsystem => 'Nexenta',
+        }
+      end
+      let(:params) do
+        {
+          :hdfs_hostname => 'localhost'
         }
       end
 
