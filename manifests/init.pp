@@ -123,7 +123,7 @@ class hue (
     }
     if $zookeeper_rest_hostname and !empty($zookeeper_rest_hostname) {
       $zoo_rest_properties = {
-        'zookeeper.clusters.default.rest_url' => "http://${zookeeper_rest_hostname}:9998"
+        'zookeeper.clusters.default.rest_url' => "http://${zookeeper_rest_hostname}:9998",
       }
     } else  {
       $zoo_rest_properties = {}
