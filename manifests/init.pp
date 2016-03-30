@@ -6,6 +6,7 @@ class hue (
   $hdfs_hostname = undef,
   $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
+  $impala_hostname = undef,
   $oozie_hostname = undef,
   $yarn_hostname = undef,
   $yarn_hostname2 = undef,
@@ -68,12 +69,22 @@ class hue (
     }
   }
 
-  if $hive_server2_hostname {
+  if $hive_server2_hostname and !empty($hive_server2_hostname) {
     $hive_properties = {
       'beeswax.hive_server_host' => $hive_server2_hostname,
     }
   } else {
     $hive_properties = {}
+  }
+
+  if $impala_hostname and !empty($impala_hostname) {
+    $impala_properties = {
+      'impala.server_host' => $impala_hostname,
+      # port needs to be specified
+      'impala.server_port' => 21050,
+    }
+  } else {
+    $impala_properties = {}
   }
 
   if $oozie_hostname and !empty($oozie_hostname) {
@@ -142,7 +153,7 @@ class hue (
     $zoo_properties = {}
   }
 
-  $_properties = merge($base_properties, $hdfs_properties, $hive_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
+  $_properties = merge($base_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
   class { '::hue::install': } ->
   class { '::hue::config': } ~>

@@ -83,6 +83,12 @@ It is required with HDFS High Availability. We recommend to have it on the same 
 
 Hive Server2 hostname. Default: undef.
 
+####`impala_hostname`
+
+Impala server hostname. Default: undef.
+
+Use one of the impalad.
+
 ####`https`
 
 Enable support for https. Default: false.
