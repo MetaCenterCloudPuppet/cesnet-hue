@@ -3,7 +3,7 @@
 # The main configuration class.
 #
 class hue (
-  $hdfs_hostname,
+  $hdfs_hostname = undef,
   $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
   $oozie_hostname = undef,
@@ -23,6 +23,14 @@ class hue (
   include ::stdlib
 
   validate_array($zookeeper_hostnames)
+  if (!$hdfs_hostname or empty($hdfs_hostname)) {
+    if (!$defaultFS or empty($defaultFS)) {
+      fail('$hdfs_hostname or $defaultFS parameter is required')
+    }
+    if (!$httpfs_hostname or empty($httpfs_hostname)) {
+      fail('$hdfs_hostname or $httpfs_hostname parameter is required')
+    }
+  }
 
   if !$secret or $secret == '' {
     warning('$secret parameter is empty, we recommend to set any value')

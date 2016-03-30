@@ -59,7 +59,9 @@ It can be used only when supported (for example with Cloudera distribution).
 
 ####`defaultFS`
 
-Default: undef ("hdfs://${hdfs\_hostname}:8020").
+HDFS defaultFS. Default: undef ("hdfs://${hdfs\_hostname}:8020").
+
+The value is required for HA HDFS cluster. For non-HA cluster the automatic value from *hdfs_hostname* parameter is fine.
 
 ####`group`
 
@@ -67,13 +69,15 @@ Default user group for newly created users. Default: 'users'.
 
 ####`hdfs_hostname`
 
-Hadoop HDFS hostname. Required.
+Hadoop HDFS hostname. Default: undef.
+
+The value is required for non-HA HDFS cluster (for HDFS HA, the parameters *httpfs_hostname* and *defaultFS* must be used instead).
 
 ####`httpfs_hostname`
 
-HTTPFS proxy hostname, if available. Default: true.
+HTTPFS proxy hostname, if available. Default: undef.
 
-It is required with HDFS High Availability. It should be the same machine as Apache Hue.
+It is required with HDFS High Availability. We recommend to have it on the same machine with Apache Hue.
 
 ####`hive_server2_hostname`
 
