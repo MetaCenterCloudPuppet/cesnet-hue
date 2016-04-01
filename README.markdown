@@ -6,6 +6,7 @@
     * [Setup requirements](#setup-requirements)
 3. [Usage - Configuration options and additional functionality](#usage)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
+    * [Classes](#classes)
 5. [Limitations - OS compatibility, etc.](#limitations)
 6. [Development - Guide for contributing to the module](#development)
 
@@ -34,16 +35,21 @@ Installs Apache Hue - web user interface for Hadoop.
       hdfs_hostname => 'hdfs.example.com',
     }
 
+There is also needed class *hue::hdfs* on all HDFS Namenodes to authoriation work properly. You can use also *hue::user*, or install *hue-common* package.
+
 ## Reference
 
+<a name="classes">
 ### Classes
 
 * [**`hue`**](#class-hue): The main configuration class
 * `hue::common::postinstall`: Preparation steps after installation
 * `hue::config`: Configuration of Apache Hue
+* [**`hue::hdfs`**](#class-hue-hdfs): HDFS initialiations
 * `hue::install`: Installation of Apache Hue
 * `hue::params`
 * `hue::service`: Ensure the Apache Hue is running
+* [**`hue::user`**](#class-hue-user): Create hue system user, if needed
 
 <a name="class-hue">
 ### Class `hue`
@@ -93,6 +99,34 @@ Use one of the impalad.
 
 Enable support for https. Default: false.
 
+####`https_cachain`
+
+CA chain file in PEM format. Default: undef.
+
+System default is */etc/hue/cacerts.pem*.
+
+####`https_certificate`
+
+Certificate file in PEM format. Default: '/etc/grid-security/hostcert.pem'.
+
+The certificate file is copied into Hue configuraton directory.
+
+####`https_private_key`
+
+Private key file in PEM format. Default: '/etc/grid-security/hostkey.pem'.
+
+The key file is copied into Hue configuraton directory.
+
+####`https_passphrase`
+
+Default: undef.
+
+####`keytab_hue`
+
+Default: "/etc/security/keytabs/hue.service.keytab".
+
+Hue keytab file with *hue/HOSTNAME@REALM* principal.
+
 ####`oozie_hostname`
 
 Oozie server hostname. Default: undef.
@@ -111,6 +145,12 @@ Hue package name. Default: 'hue'.
 
 Hue service name. Default: 'hue'.
 
+####`realm`
+
+Kerberos realm. Default: undef.
+
+Non-empty value enables the security.
+
 ####`yarn_hostname`
 
 Hadoop YARN Resourcemanager hostname. Default: undef.
@@ -128,6 +168,20 @@ List of zookeeper hostnames. Default: [].
 Zookeeper REST server hostname. Default: undef.
 
 Not available in Cloudera. Sources are available at [https://github.com/apache/zookeeper](https://github.com/apache/zookeeper/tree/trunk/src/contrib/rest).
+
+<a name="class-hue-hdfs">
+### Class `hue::hdfs`
+
+HDFS initialiations. Actions necessary to launch on HDFS namenode: Create hue user, if needed.
+
+This class or *hue::user* class is needed to be launched on all HDFS namenodes.
+
+<a name="class-hue-user">
+### Class `hue::user`
+
+Creates hue system user, if needed. The hue user is required on the all HDFS namenodes to autorization work properly and we don't need to install hue just for the user.
+
+It is better to handle creating the user by the packages, so we recommend dependency on installation classes or Hue packages.
 
 ## Limitations
 
