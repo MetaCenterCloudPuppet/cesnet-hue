@@ -20,16 +20,16 @@ class hue::config {
 
   if $hue::https {
     file { $hue::_https_certificate:
-      owner => 'hue',
-      group => 'hue',
-      mode  => '0644',
+      owner  => 'hue',
+      group  => 'hue',
+      mode   => '0644',
       source => $hue::https_certificate,
     }
 
     file { $hue::_https_private_key:
-      owner => 'hue',
-      group => 'hue',
-      mode  => '0400',
+      owner  => 'hue',
+      group  => 'hue',
+      mode   => '0400',
       source => $hue::https_private_key,
     }
   }
