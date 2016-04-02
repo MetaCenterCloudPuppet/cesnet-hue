@@ -114,7 +114,9 @@ Installs Apache Hue - web user interface for Hadoop environment.
       }
     }
 
-There is also needed class *hue::hdfs* on all HDFS Namenodes to authorization work properly. You can use also *hue::user*, or install *hue-common* package.
+There is also needed class *hue::hdfs* on all HDFS Namenodes to authorization work properly. You can use *hue::user* instead, or install *hue-common* package.
+
+It is recommended to set properties *hadoop.yarn_clusters.default.logical_name* and *hadoop.yarn_clusters.ha.logical_name* according to the *yarn.resourcemanager.ha.rm-ids* from Hadoop YARN. *cesnet-hue* module uses 'rm1' and 'rm2' values, which is *cesnet-hadoop* puppet module default.
 
 ### Enable security
 
@@ -157,7 +159,7 @@ It can be used only when supported (for example with Cloudera distribution).
 
 HDFS defaultFS. Default: undef ("hdfs://${hdfs\_hostname}:8020").
 
-The value is required for HA HDFS cluster. For non-HA cluster the automatic value from *hdfs_hostname* parameter is fine.
+The value is required for HA HDFS cluster. For non-HA cluster the automatic value from *hdfs\_hostname* parameter is fine.
 
 ####`group`
 
@@ -167,7 +169,13 @@ Default user group for newly created users. Default: 'users'.
 
 Hadoop HDFS hostname. Default: undef.
 
-The value is required for non-HA HDFS cluster (for HDFS HA, the parameters *httpfs_hostname* and *defaultFS* must be used instead).
+The value is required for non-HA HDFS cluster (for HDFS HA, the parameters *httpfs\_hostname* and *defaultFS* must be used instead).
+
+####`historyserver_hostname`
+
+Hadoop MapReduce Job History hostname. Default: undef.
+
+By default, the value is *yarn\_hostname2*, or *yarn\_hostname*.
 
 ####`httpfs_hostname`
 

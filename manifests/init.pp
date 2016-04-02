@@ -6,6 +6,7 @@ class hue (
   $hdfs_hostname = undef,
   $httpfs_hostname = undef,
   $hive_server2_hostname = undef,
+  $historyserver_hostname = undef,
   $impala_hostname = undef,
   $oozie_hostname = undef,
   $yarn_hostname = undef,
@@ -161,11 +162,12 @@ class hue (
   }
 
   if $yarn_hostname and !empty($yarn_hostname) {
+    $_jhs_hostname = pick($historyserver_hostname, $yarn_hostname2, $yarn_hostname)
     if $https {
-      $jhs_url = "https://${yarn_hostname}:19890"
+      $jhs_url = "https://${_jhs_hostname}:19890"
       $rm1_url = "https://${yarn_hostname}:8090"
     } else {
-      $jhs_url = "http://${yarn_hostname}:19888"
+      $jhs_url = "http://${_jhs_hostname}:19888"
       $rm1_url = "http://${yarn_hostname}:8088"
     }
     $yarn_base_properties = {
@@ -184,9 +186,13 @@ class hue (
       }
       $yarn_ha_properties = {
         'hadoop.yarn_clusters.default.logical_name' => 'rm1',
+        'hadoop.yarn_clusters.ha.history_server_api_url' => $jhs_url,
         'hadoop.yarn_clusters.ha.logical_name' => 'rm2',
         'hadoop.yarn_clusters.ha.proxy_api_url' => $rm2_url,
         'hadoop.yarn_clusters.ha.resourcemanager_api_url' => $rm2_url,
+        'hadoop.yarn_clusters.ha.resourcemanager_host' => $yarn_hostname2,
+        'hadoop.yarn_clusters.ha.security_enabled' => $security_enabled,
+        'hadoop.yarn_clusters.ha.submit_to' => 'True',
       }
     }
 
