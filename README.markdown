@@ -12,6 +12,7 @@
     * [Basic cluster usage](#basic-cluster-usage)
     * [High availability cluster usage](#high-availability-cluster-usage)
     * [Enable security](#enable-security)
+    * [Enable SPNEGO authentization](#enable-spnego-authentization)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
     * [Classes](#classes)
     * [Module Parameters (hue class)](#class-hue)
@@ -129,6 +130,27 @@ Default credential files locations:
 * */etc/grid-security/hostkey.pem*
 * */etc/hue/cacerts.pem* (system default)
 
+### Enable SPNEGO authentization
+
+You can authenticate over HTTPS using Kerberos ticket.
+
+For that is needed kerberos keytab with principals (replace *HOSTNAME* and *REALLM* by real values):
+
+* hue/*HOSTNAME*@*REALM*
+* HTTP/*HOSTNAME*@*REALM*
+
+You will need to set *KRB5_KTNAME* in *environment* parameter.
+
+Also you will need to set the auth backend to *desktop.auth.backend.SpnegoDjangoBackend*.
+
+**Example** (hiera yaml format):
+
+    hue::environment:
+     KRB5_KTNAME:  /etc/security/keytab/hue-http.service.keytab
+    hue::keytab_hue: /etc/security/keytab/hue.service.keytab
+    hue::properties:
+     desktop.auth.backend: desktop.auth.backend.SpnegoDjangoBackend
+
 ## Reference
 
 <a name="classes">
@@ -160,6 +182,14 @@ It can be used only when supported (for example with Cloudera distribution).
 HDFS defaultFS. Default: undef ("hdfs://${hdfs\_hostname}:8020").
 
 The value is required for HA HDFS cluster. For non-HA cluster the automatic value from *hdfs\_hostname* parameter is fine.
+
+####`environment`
+
+Environment to set for Hue daemon. Default: undef.
+
+    environment => {
+      'KRB5_KTNAME' => '/var/lib/hue/hue.keytab',
+    }
 
 ####`group`
 

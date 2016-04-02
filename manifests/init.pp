@@ -15,6 +15,7 @@ class hue (
   $zookeeper_rest_hostname = undef,
   $alternatives = '::default',
   $defaultFS = undef,
+  $environment = undef,
   $group = 'users',
   $https = false,
   $https_cachain = undef,
@@ -218,6 +219,7 @@ class hue (
     $zoo_properties = {}
   }
 
+  $_environment = merge({}, $environment)
   $_properties = merge($base_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
   class { '::hue::install': } ->

@@ -10,6 +10,14 @@ class hue::config {
     content => template('hue/hue.ini.erb'),
   }
 
+  $defaultdir = $hue::defaultdir
+  $environment = $hue::_environment
+  augeas{"${defaultdir}/hue":
+    lens    => 'Shellvars.lns',
+    incl    => "${defaultdir}/hue",
+    changes => template('hue/hue-env.augeas.erb'),
+  }
+
   if $hue::realm and !empty($hue::realm) {
     file { $hue::keytab_hue:
       owner => 'hue',

@@ -15,6 +15,13 @@ class hue::params {
   }
 
   $confdir = '/etc/hue/conf'
+
+  $defaultdir = "${::osfamily}-${::operatingsystem}" ? {
+    /RedHat-Fedora/ => '/etc/sysconfig',
+    /Debian|RedHat/ => '/etc/default',
+  }
+
   $package_name = 'hue'
+
   $service_name = 'hue'
 }
