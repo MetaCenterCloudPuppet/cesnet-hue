@@ -1,6 +1,6 @@
 # == Class: hue
 #
-# The main configuration class.
+# The main deployment class.
 #
 class hue (
   $hdfs_hostname = undef,

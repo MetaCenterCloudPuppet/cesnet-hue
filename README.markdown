@@ -1,3 +1,7 @@
+## Apache Hue
+
+[![Build Status](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue.svg?branch=master)](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue)
+
 #### Table of Contents
 
 1. [Module Description - What the module does and why it is useful](#module-description)
@@ -5,14 +9,18 @@
     * [What hue affects](#what-hue-affects)
     * [Setup requirements](#setup-requirements)
 3. [Usage - Configuration options and additional functionality](#usage)
+    * [Basic cluster usage](#basic-cluster-usage)
+    * [High availability cluster usage](#high-availability-cluster-usage)
+    * [Enable security](#enable-security)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
     * [Classes](#classes)
+    * [Module Parameters (hue class)](#class-hue)
 5. [Limitations - OS compatibility, etc.](#limitations)
 6. [Development - Guide for contributing to the module](#development)
 
 ## Module Description
 
-Installs Apache Hue - web user interface for Hadoop.
+Installs Apache Hue - web user interface for Hadoop environment.
 
 ## Setup
 
@@ -21,21 +29,103 @@ Installs Apache Hue - web user interface for Hadoop.
 * Alternatives:
  * alternatives are used for */etc/hue/conf* in Cloudera
  * this module switches to the new alternative by default, so the original configuration can be kept intact
-* Files modified: */etc/hue/conf/hue.ini*
+* Files modified:
+ * */etc/hue/conf/hue.ini*
+ * */etc/security/keytab/hue.service.keytab* ownership changed (only when security is enabled, the path can be changed by *keytab_hue* parameter)
+ * */etc/grid-security/hostcert.pem* copied to */etc/hue/conf/* (only with *https*)
+ * */etc/grid-security/hostkey.pem* copied to */etc/hue/conf/* (only with *https*)
 * Packages: *hue*
+* Services: *hue*
+* Users and groups:
+ * *hue::hdfs* and *hue::user* classes creates the user *hue* and group *hue*
 
 ### Setup Requirements
 
-* Hadoop cluster with WebHDFS or httpfs
-* ...
+* Hadoop cluster with WebHDFS or httpfs (httpfs is required for HDFS HA)
+* HBase with thrift server (optional)
+* Hive Server2 (optional)
+* Authorizations set ('hue' group must be enabled in *security.client.protocol.acl*, default '*' is OK)
+* Proxy users set for Hadoop core, Hadoop httpfs, Ozzie server
+ * for *cesnet::hadoop* puppet module: parameters *hue\_hostnames* and *httpfs\_hostnames*
+ * for *cesnet::oozie* puppet module: parameter *hue\_hostnames*
 
 ## Usage
 
-    class { '::hue':
-      hdfs_hostname => 'hdfs.example.com',
+### Basic cluster usage
+
+    $master_hostname = 'hdfs.example.com'
+    $hue_hostname = 'hue.example.com'
+
+    class { '::hadoop':
+      ...
+      hue_hostnames    => ['hue.example.com'],
     }
 
-There is also needed class *hue::hdfs* on all HDFS Namenodes to authoriation work properly. You can use also *hue::user*, or install *hue-common* package.
+    node 'hdfs.example.com' {
+      include ::hadoop::namenode
+      ...
+      include ::hue::hdfs
+    }
+
+    node 'hue.example.com' {
+      class { '::hue':
+        hdfs_hostname => $master_hostname,
+        #yarn_hostname  => ...,
+        #oozie_hostname => ...,
+      }
+    }
+
+### High availability cluster usage
+
+    $cluster_name = 'cluster',
+    $master_hostnames = [
+      'master1.example.com',
+      'master2.example.com',
+    ]
+    $hue_hostname = 'hue.example.com'
+
+    class { '::hadoop':
+      ...
+      cluster_name      => $cluster_name,
+      hdfs_hostname    => $master_hostnames[0],
+      hdfs_hostnames   => $master_hostnames[1],
+      hue_hostnames    => ['hue.example.com'],
+    }
+
+    node 'master1.example.com' {
+      include ::hadoop::namenode
+      ...
+      include ::hue::hdfs
+    }
+
+    node 'master2.example.com' {
+      include ::hadoop::namenode
+      ...
+      include ::hue::user
+    }
+
+    node 'hue.example.com' {
+      class { '::hue':
+        defaultFS       => "hdfs://${cluster_name}",
+        httpfs_hostname => $hue_hostname,
+        #yarn_hostname  => ...,
+        #yarn_hostname2 => ...,
+        #oozie_hostname => ...,
+      }
+    }
+
+There is also needed class *hue::hdfs* on all HDFS Namenodes to authorization work properly. You can use also *hue::user*, or install *hue-common* package.
+
+### Enable security
+
+Useful parameters: [*https*](#https) [*https\_cachain*](#https_cachain) [*https\_certificate*](#https_certificate) [*https\_private\_key*](#https_private_key) [*https\_passphrase*](#https_passphrase) [*keytab\_hue*](#keytab_hue) [*realm*](#realm)
+
+Default credential files locations:
+
+* */etc/security/keytab/hue.service.keytab*
+* */etc/grid-security/hostcert.pem*
+* */etc/grid-security/hostkey.pem*
+* */etc/hue/cacerts.pem* (system default)
 
 ## Reference
 
@@ -45,7 +135,7 @@ There is also needed class *hue::hdfs* on all HDFS Namenodes to authoriation wor
 * [**`hue`**](#class-hue): The main configuration class
 * `hue::common::postinstall`: Preparation steps after installation
 * `hue::config`: Configuration of Apache Hue
-* [**`hue::hdfs`**](#class-hue-hdfs): HDFS initialiations
+* [**`hue::hdfs`**](#class-hue-hdfs): HDFS initialization
 * `hue::install`: Installation of Apache Hue
 * `hue::params`
 * `hue::service`: Ensure the Apache Hue is running
@@ -54,7 +144,7 @@ There is also needed class *hue::hdfs* on all HDFS Namenodes to authoriation wor
 <a name="class-hue">
 ### Class `hue`
 
-The main configuration class.
+The main deployment class.
 
 ####`alternatives`
 
@@ -109,13 +199,13 @@ System default is */etc/hue/cacerts.pem*.
 
 Certificate file in PEM format. Default: '/etc/grid-security/hostcert.pem'.
 
-The certificate file is copied into Hue configuraton directory.
+The certificate file is copied into Hue configuration directory.
 
 ####`https_private_key`
 
 Private key file in PEM format. Default: '/etc/grid-security/hostkey.pem'.
 
-The key file is copied into Hue configuraton directory.
+The key file is copied into Hue configuration directory.
 
 ####`https_passphrase`
 
@@ -172,14 +262,14 @@ Not available in Cloudera. Sources are available at [https://github.com/apache/z
 <a name="class-hue-hdfs">
 ### Class `hue::hdfs`
 
-HDFS initialiations. Actions necessary to launch on HDFS namenode: Create hue user, if needed.
+HDFS initialization. Actions necessary to launch on HDFS namenode: Create hue user, if needed.
 
 This class or *hue::user* class is needed to be launched on all HDFS namenodes.
 
 <a name="class-hue-user">
 ### Class `hue::user`
 
-Creates hue system user, if needed. The hue user is required on the all HDFS namenodes to autorization work properly and we don't need to install hue just for the user.
+Creates hue system user, if needed. The hue user is required on the all HDFS namenodes to authorization work properly and we don't need to install hue just for the user.
 
 It is better to handle creating the user by the packages, so we recommend dependency on installation classes or Hue packages.
 
