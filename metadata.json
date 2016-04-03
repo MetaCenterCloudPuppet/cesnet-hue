@@ -1,8 +1,8 @@
 {
   "name": "cesnet-hue",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "cesnet",
-  "summary": "Apache Hue - user interface for Hadoop",
+  "summary": "Apache Hue - web user interface for Hadoop",
   "license": "MIT",
   "source": "https://github.com/MetaCenterCloudPuppet/cesnet-hue.git",
   "project_page": "https://github.com/MetaCenterCloudPuppet/cesnet-hue",
