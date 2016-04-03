@@ -1,4 +1,4 @@
-## Apache Hue
+## Apache Hue Web Interface
 
 [![Build Status](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue.svg?branch=master)](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue)
 
@@ -45,7 +45,7 @@ Installs Apache Hue - web user interface for Hadoop environment.
 * Hadoop cluster with WebHDFS or httpfs (httpfs is required for HDFS HA)
 * HBase with thrift server (optional)
 * Hive Server2 (optional)
-* Authorizations set ('hue' group must be enabled in *security.client.protocol.acl*, default '*' is OK)
+* Authorizations set ('hue' user must be enabled in *security.client.protocol.acl*, default '*' is OK)
 * Proxy users set for Hadoop core, Hadoop httpfs, Ozzie server
  * for *cesnet::hadoop* puppet module: parameters *hue\_hostnames* and *httpfs\_hostnames*
  * for *cesnet::oozie* puppet module: parameter *hue\_hostnames*
@@ -56,10 +56,11 @@ Installs Apache Hue - web user interface for Hadoop environment.
 
     $master_hostname = 'hdfs.example.com'
     $hue_hostname = 'hue.example.com'
+    $secret = 'I sleep with my cats.'
 
     class { '::hadoop':
       ...
-      hue_hostnames    => ['hue.example.com'],
+      hue_hostnames => ['hue.example.com'],
     }
 
     node 'hdfs.example.com' {
@@ -73,6 +74,7 @@ Installs Apache Hue - web user interface for Hadoop environment.
         hdfs_hostname => $master_hostname,
         #yarn_hostname  => ...,
         #oozie_hostname => ...,
+        secret        => $secret,
       }
     }
 
@@ -84,13 +86,14 @@ Installs Apache Hue - web user interface for Hadoop environment.
       'master2.example.com',
     ]
     $hue_hostname = 'hue.example.com'
+    $secret = "Trump's real name is Drumph."
 
     class { '::hadoop':
       ...
-      cluster_name      => $cluster_name,
-      hdfs_hostname    => $master_hostnames[0],
-      hdfs_hostnames   => $master_hostnames[1],
-      hue_hostnames    => ['hue.example.com'],
+      cluster_name   => $cluster_name,
+      hdfs_hostname  => $master_hostnames[0],
+      hdfs_hostnames => $master_hostnames[1],
+      hue_hostnames  => ['hue.example.com'],
     }
 
     node 'master1.example.com' {
@@ -112,12 +115,13 @@ Installs Apache Hue - web user interface for Hadoop environment.
         #yarn_hostname  => ...,
         #yarn_hostname2 => ...,
         #oozie_hostname => ...,
+        secret          => $secret,
       }
     }
 
 There is also needed class *hue::hdfs* on all HDFS Namenodes to authorization work properly. You can use *hue::user* instead, or install *hue-common* package.
 
-It is recommended to set properties *hadoop.yarn_clusters.default.logical_name* and *hadoop.yarn_clusters.ha.logical_name* according to the *yarn.resourcemanager.ha.rm-ids* from Hadoop YARN. *cesnet-hue* module uses 'rm1' and 'rm2' values, which is *cesnet-hadoop* puppet module default.
+It is recommended to set properties *hadoop.yarn\_clusters.default.logical\_name* and *hadoop.yarn\_clusters.ha.logical\_name* according to the *yarn.resourcemanager.ha.rm-ids* from Hadoop YARN. *cesnet-hue* module uses 'rm1' and 'rm2' values, which is *cesnet-hadoop* puppet module default.
 
 ### Enable security
 
