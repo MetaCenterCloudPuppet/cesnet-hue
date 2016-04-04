@@ -45,10 +45,18 @@ Installs Apache Hue - web user interface for Hadoop environment.
 * Hadoop cluster with WebHDFS or httpfs (httpfs is required for HDFS HA)
 * HBase with thrift server (optional)
 * Hive Server2 (optional)
-* Authorizations set ('hue' user must be enabled in *security.client.protocol.acl*, default '*' is OK)
-* Proxy users set for Hadoop core, Hadoop httpfs, Ozzie server
+* Oozie Server (optional)
+* Authorizations set
+ * 'hue' user must be enabled in *security.client.protocol.acl*, default '*' is OK
+* Proxy users set for Hadoop core, Hadoop httpfs, Ozzie server and Hive
  * for *cesnet::hadoop* puppet module: parameters *hue\_hostnames* and *httpfs\_hostnames*
  * for *cesnet::oozie* puppet module: parameter *hue\_hostnames*
+ * for *cesnet::hive* puppet module:
+  * add 'oozie' and 'hive' to *hadoop.proxyuser.hive.groups*
+  * set also *hadoop.proxyuser.hive.hosts* as needed
+* with security:
+ * secured cluster
+ * Oozie property (among the others): *oozie.credentials.credentialclasses*
 
 ## Usage
 
