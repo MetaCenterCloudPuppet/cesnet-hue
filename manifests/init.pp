@@ -56,6 +56,8 @@ class hue (
     'useradmin.default_user_group' => $group,
     'desktop.database.engine' => 'sqlite3',
     'desktop.database.name' => '/var/lib/hue/desktop.db',
+    # IPv6 works out-of-the box, only needs to be enabled here
+    'desktop.http_host' => '::',
     'desktop.secret_key' => $secret,
     'hadoop.hdfs_clusters.default.fs_defaultfs' => $_defaultfs,
     'hadoop.mapred_clusters.default.submit_to' => 'False',
@@ -131,6 +133,9 @@ class hue (
 
   if $impala_hostname and !empty($impala_hostname) {
     $impala_base_properties = {
+      # usefull for authorization (implemented only partially, HDFS
+      # impersonation not avaialable in impala)
+      'impala.impersonation_enabled' => 'True,
       'impala.server_host' => $impala_hostname,
       # port needs to be always specified
       'impala.server_port' => 21050,
