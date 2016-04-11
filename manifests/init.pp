@@ -135,7 +135,7 @@ class hue (
     $impala_base_properties = {
       # usefull for authorization (implemented only partially, HDFS
       # impersonation not avaialable in impala)
-      'impala.impersonation_enabled' => 'True,
+      'impala.impersonation_enabled' => True,
       'impala.server_host' => $impala_hostname,
       # port needs to be always specified
       'impala.server_port' => 21050,
