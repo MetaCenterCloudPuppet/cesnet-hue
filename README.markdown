@@ -69,6 +69,7 @@ Installs Apache Hue - web user interface for Hadoop environment.
     class { '::hadoop':
       ...
       hue_hostnames => ['hue.example.com'],
+      #oozie_hostnames => [...],
     }
 
     node 'hdfs.example.com' {
@@ -98,10 +99,14 @@ Installs Apache Hue - web user interface for Hadoop environment.
 
     class { '::hadoop':
       ...
-      cluster_name   => $cluster_name,
-      hdfs_hostname  => $master_hostnames[0],
-      hdfs_hostnames => $master_hostnames[1],
-      hue_hostnames  => ['hue.example.com'],
+      cluster_name     => $cluster_name,
+      hdfs_hostname    => $master_hostnames[0],
+      hdfs_hostname2   => $master_hostnames[1],
+      hue_hostnames    => [$hue_hostname],
+      httpfs_hostnames => [$hue_hostname],
+      yarn_hostname    => $master_hostnames[0],
+      yarn_hostname2   => $master_hostnames[1],
+      #oozie_hostnames => [...],
     }
 
     node 'master1.example.com' {
@@ -117,11 +122,12 @@ Installs Apache Hue - web user interface for Hadoop environment.
     }
 
     node 'hue.example.com' {
+      include ::hadoop::httpfs
       class { '::hue':
         defaultFS       => "hdfs://${cluster_name}",
         httpfs_hostname => $hue_hostname,
-        #yarn_hostname  => ...,
-        #yarn_hostname2 => ...,
+        yarn_hostname   => $master_hostnames[0],
+        yarn_hostname2  => $master_hostnames[1],
         #oozie_hostname => ...,
         secret          => $secret,
       }
@@ -146,7 +152,7 @@ Default credential files locations:
 
 You can authenticate over HTTPS using Kerberos ticket.
 
-For that is needed kerberos keytab with principals (replace *HOSTNAME* and *REALLM* by real values):
+For that is needed kerberos keytab with principals (replace *HOSTNAME* and *REALM* by real values):
 
 * hue/*HOSTNAME*@*REALM*
 * HTTP/*HOSTNAME*@*REALM*
