@@ -13,6 +13,8 @@
     * [High availability cluster usage](#high-availability-cluster-usage)
     * [Enable security](#enable-security)
     * [Enable SPNEGO authentization](#enable-spnego-authentization)
+    * [MySQL backend](#mysql-backend)
+    * [PostgreSQL backend](#postgresql-backend)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
     * [Classes](#classes)
     * [Module Parameters (hue class)](#class-hue)
@@ -35,10 +37,15 @@ Installs Apache Hue - web user interface for Hadoop environment.
  * */etc/security/keytab/hue.service.keytab* ownership changed (only when security is enabled, the path can be changed by *keytab_hue* parameter)
  * */etc/grid-security/hostcert.pem* copied to */etc/hue/conf/* (only with *https*)
  * */etc/grid-security/hostkey.pem* copied to */etc/hue/conf/* (only with *https*)
-* Packages: *hue*
+ * when using external database, the import logs in */var/lib/hue/logs/* are kept
+* Helper files:
+ * */var/lib/hue/.puppet-init1-syncdb*
+ * */var/lib/hue/.puppet-init1-migrate*
+* Packages: *hue*, *python-psycopg2* (when postgres DB is used)
 * Services: *hue*
 * Users and groups:
  * *hue::hdfs* and *hue::user* classes creates the user *hue* and group *hue*
+* When using external database: data are imported using hue tools
 
 ### Setup Requirements
 
@@ -139,7 +146,17 @@ It is recommended to set properties *hadoop.yarn\_clusters.default.logical\_name
 
 ### Enable security
 
-Useful parameters: [*https*](#https) [*https\_cachain*](#https_cachain) [*https\_certificate*](#https_certificate) [*https\_private\_key*](#https_private_key) [*https\_passphrase*](#https_passphrase) [*keytab\_hue*](#keytab_hue) [*realm*](#realm)
+Use *realm* parameter to set the Kerberos realm and enable security. *https* parameter will enable SSL support.
+
+Useful parameters:
+
+* [*https*](#https)
+* [*https\_cachain*](#https_cachain)
+* [*https\_certificate*](#https_certificate)
+* [*https\_private\_key*](#https_private_key)
+* [*https\_passphrase*](#https_passphrase)
+* [*keytab\_hue*](#keytab_hue)
+* [*realm*](#realm)
 
 Default credential files locations:
 
@@ -157,7 +174,7 @@ For that is needed kerberos keytab with principals (replace *HOSTNAME* and *REAL
 * hue/*HOSTNAME*@*REALM*
 * HTTP/*HOSTNAME*@*REALM*
 
-You will need to set *KRB5_KTNAME* in *environment* parameter.
+You will need to set *KRB5\_KTNAME* in *environment* parameter.
 
 Also you will need to set the auth backend to *desktop.auth.backend.SpnegoDjangoBackend*.
 
@@ -168,6 +185,63 @@ Also you will need to set the auth backend to *desktop.auth.backend.SpnegoDjango
     hue::keytab_hue: /etc/security/keytab/hue.service.keytab
     hue::properties:
      desktop.auth.backend: desktop.auth.backend.SpnegoDjangoBackend
+
+### MySQL backend
+
+It is recommended to use a full database instead of sqlite.
+
+Example of using MySQL with *puppetlabs-mysql* puppet module:
+
+    node 'hue.example.com' {
+      ...
+
+      class{'::hue':
+        ...
+        db          => 'mysql',
+        db_password => 'huepassword',
+      }
+
+      class { '::mysql::server':
+        root_password  => 'strongpassword',
+      }
+
+      mysql::db { 'hue':
+        user     => 'hue',
+        password => 'huepassword',
+        grant    => ['ALL'],
+      }
+
+      # database import in the hue::service, database also required for hue
+      Mysql::Db['hue'] -> Class['hue::service']
+    }
+
+### PostgreSQL backend
+
+It is recommended to use a full database instead of sqlite.
+
+Example of using PostgreSQL with *puppetlabs-postgresql* puppet module:
+
+    node 'hue.example.com' {
+      ...
+
+      class{'::hue':
+        ...
+        db          => 'postgresql',
+        db_password => 'huepassword',
+      }
+
+      class { '::postgresql::server':
+        postgres_password  => 'strongpassword',
+      }
+
+      postgresql::server::db { 'hue':
+        user     => 'hue',
+        password => postgresql_password('hue', 'huepassword'),
+      }
+
+      # database import in the hue::service, database also required for hue
+      Postgresql::Server::Db['hue'] -> Class['hue::service']
+    }
 
 ## Reference
 
@@ -194,6 +268,47 @@ Switches the alternatives used for the configuration. Default: 'cluster' (Debian
 ) or undef.
 
 It can be used only when supported (for example with Cloudera distribution).
+
+####`db`
+
+Database backend for Hue. Default: undef.
+
+The default is the *sqlite* database, but it is recommended to use a full database.
+
+Values:
+
+* **sqlite** (default): database in the file
+* **mariadb**, **mysql**: MySQL/MariaDB
+* **oracle**: Oracle database
+* **postgresql**: PostgreSQL
+
+It can be overridden by *desktop.database.engine* property.
+
+####`db_host`
+
+Database hostname for *mariadb*, *mysql*, *postgresql*. Default: 'localhost'.
+
+It can be overridden by *desktop.database.host* property.
+
+####`db_name`
+
+The file for *sqlite*, database name for *mariadb*, *mysql* and *postgresql*, or database name or SID for *oracle*. Default: undef.
+
+Default values:
+
+* *sqlite*: */var/lib/hue/desktop.db*
+* *mariadb*, *mysql*, *postgresql*: *hue*
+* *oracle*: *XE*
+
+It can be overridden by *desktop.database.name* property.
+
+####`db_user`
+
+Database user for *mariadb*, *mysql*, and *postgresql*. Default: 'hue'.
+
+####`db_password`
+
+Database password for *mariadb*, *mysql*, and *postgresql*. Default: undef.
 
 ####`defaultFS`
 

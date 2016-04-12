@@ -6,8 +6,10 @@
 class hue::params {
   case "${::osfamily}-${::operatingsystem}" {
     /Debian/: {
+      $packages_postgresql = ['python-psycopg2']
     }
     /RedHat/: {
+      $packages_postgresql = ['python-psycopg2']
     }
     default: {
       fail("${::osfamily}/${::operatingsystem} not supported")
@@ -20,6 +22,9 @@ class hue::params {
     /RedHat-Fedora/ => '/etc/sysconfig',
     /Debian|RedHat/ => '/etc/default',
   }
+
+  # not real homedir, just a directory for hue-specific data
+  $homedir = '/var/lib/hue'
 
   $package_name = 'hue'
 

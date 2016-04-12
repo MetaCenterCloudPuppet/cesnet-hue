@@ -14,6 +14,11 @@ class hue (
   $zookeeper_hostnames = [],
   $zookeeper_rest_hostname = undef,
   $alternatives = '::default',
+  $db = undef,
+  $db_host = 'localhost',
+  $db_user = 'hue',
+  $db_name = undef,
+  $db_password = undef,
   $defaultFS = undef,
   $environment = undef,
   $group = 'users',
@@ -54,14 +59,62 @@ class hue (
   $_defaultfs = pick($defaultFS, "hdfs://${hdfs_hostname}:8020")
   $base_properties = {
     'useradmin.default_user_group' => $group,
-    'desktop.database.engine' => 'sqlite3',
-    'desktop.database.name' => '/var/lib/hue/desktop.db',
     # IPv6 works out-of-the box, only needs to be enabled here
     'desktop.http_host' => '::',
     'desktop.secret_key' => $secret,
     'hadoop.hdfs_clusters.default.fs_defaultfs' => $_defaultfs,
     'hadoop.mapred_clusters.default.submit_to' => 'False',
   }
+
+  case $db {
+    'sqlite', default: {
+      $db_base_properties = {
+        'desktop.database.engine' => 'sqlite3',
+        'desktop.database.name' => pick($db_name, '/var/lib/hue/desktop.db'),
+      }
+      $db_packages = []
+      $external_db = false
+    }
+    'mariadb', 'mysql': {
+      $db_base_properties = {
+        'desktop.database.engine' => 'mysql',
+        'desktop.database.host' => $db_host,
+        'desktop.database.name' => pick($db_name, 'hue'),
+        'desktop.database.user' => $db_user,
+      }
+      $db_packages = []
+      $external_db = true
+    }
+    'oracle': {
+      $db_base_properties = {
+        'desktop.database.engine' => 'oracle',
+        'desktop.database.host' => $db_host,
+        'desktop.database.name' => pick($db_name, 'XE'),
+        'desktop.database.user' => $db_user,
+      }
+      $db_packages = []
+      $external_db = true
+    }
+    'postgresql': {
+      $db_base_properties = {
+        'desktop.database.engine' => 'postgresql_psycopg2',
+        'desktop.database.host' => $db_host,
+        'desktop.database.name' => pick($db_name, 'hue'),
+        'desktop.database.user' => $db_user,
+      }
+      $db_packages = $::hue::packages_postgresql
+      $external_db = true
+    }
+  }
+  if $external_db and $db_password {
+    $db_password_properties = {
+      'desktop.database.password' => $db_password,
+    }
+  } else {
+    $db_password_properties = {}
+  }
+  $db_properties = merge($db_base_properties, $db_password_properties)
+
   if $realm and !empty($realm) {
     $security_properties = {
       'desktop.kerberos.hue_keytab' => $keytab_hue,
@@ -225,7 +278,8 @@ class hue (
   }
 
   $_environment = merge({}, $environment)
-  $_properties = merge($base_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
+  $_packages = concat($db_packages, $::hue::package_name)
+  $_properties = merge($base_properties, $db_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
   class { '::hue::install': } ->
   class { '::hue::config': } ~>

@@ -6,6 +6,6 @@ class hue::install {
   include ::stdlib
   contain hue::common::postinstall
 
-  ensure_packages($::hue::package_name)
-  Package[$::hue::package_name] -> Class['hue::common::postinstall']
+  ensure_packages($::hue::_packages)
+  Package[$::hue::_packages] -> Class['hue::common::postinstall']
 }
