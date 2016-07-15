@@ -1,6 +1,6 @@
 ## Apache Hue Web Interface
 
-[![Build Status](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue.svg?branch=master)](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue)
+[![Build Status](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue.svg?branch=master)](https://travis-ci.org/MetaCenterCloudPuppet/cesnet-hue) [![Puppet Forge](https://img.shields.io/puppetforge/v/cesnet/hue.svg)](https://forge.puppetlabs.com/cesnet/hue)
 
 #### Table of Contents
 
@@ -102,7 +102,7 @@ Installs Apache Hue - web user interface for Hadoop environment.
       'master2.example.com',
     ]
     $hue_hostname = 'hue.example.com'
-    $secret = "Trump's real name is Drumph."
+    $secret = "Trump's real name is Drumpf."
 
     class { '::hadoop':
       ...
@@ -384,7 +384,7 @@ Default: undef.
 
 ####`keytab_hue`
 
-Default: "/etc/security/keytabs/hue.service.keytab".
+Default: '/etc/security/keytabs/hue.service.keytab'.
 
 Hue keytab file with *hue/HOSTNAME@REALM* principal.
 
