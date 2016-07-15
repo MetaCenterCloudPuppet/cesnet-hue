@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'bundler/setup'
-
 require 'puppetlabs_spec_helper/rake_tasks'
 require 'puppet/version'
 require 'puppet/vendor/semantic/lib/semantic' unless Puppet.version.to_f < 3.6
@@ -30,9 +27,12 @@ Rake::Task[:lint].clear
 
 PuppetLint.configuration.relative = true
 PuppetLint.configuration.disable_80chars
+PuppetLint.configuration.disable_140chars
 PuppetLint.configuration.disable_class_inherits_from_params_class
 PuppetLint.configuration.disable_class_parameter_defaults
 PuppetLint.configuration.fail_on_warnings = true
+# this style leads to syntax errors (puppet < 3.7)
+PuppetLint.configuration.disable_relative_classname_inclusion
 
 PuppetLint::RakeTask.new :lint do |config|
   config.ignore_paths = exclude_paths
