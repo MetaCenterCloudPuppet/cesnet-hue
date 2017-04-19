@@ -129,6 +129,8 @@ class hue (
     $_https_certificate = "${hue::confdir}/hostcert.pem"
     $_https_private_key = "${hue::confdir}/hostkey.pem"
     $https_base_properties = {
+      # strict-transport-security disrupts other services on the same host
+      'desktop.secure_hsts_seconds' => 0,
       'desktop.ssl_cacerts' => $https_cachain,
       'desktop.ssl_certificate' => $_https_certificate,
       'desktop.ssl_private_key' => $_https_private_key,

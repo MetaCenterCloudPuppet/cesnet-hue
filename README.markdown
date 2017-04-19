@@ -165,6 +165,8 @@ Default credential files locations:
 * */etc/grid-security/hostkey.pem*
 * */etc/hue/cacerts.pem* (system default)
 
+By default *strict-transport-security* is explicitly disabled by this puppet module, so other services are not disrupted. Use *desktop.secure_hsts_seconds* to enable it (default value used by *hue* is **31536000**).
+
 ### Enable SPNEGO authentization
 
 You can authenticate over HTTPS using Kerberos ticket.
