@@ -26,7 +26,7 @@ class hue::config {
     }
   }
 
-  if $hue::https {
+  if $hue::_https_hue {
     file { $hue::_https_certificate:
       owner  => 'hue',
       group  => 'hue',

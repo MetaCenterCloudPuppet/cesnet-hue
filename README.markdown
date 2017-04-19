@@ -151,6 +151,7 @@ Use *realm* parameter to set the Kerberos realm and enable security. *https* par
 Useful parameters:
 
 * [*https*](#https)
+* [*https_hue*](#https_hue)
 * [*https\_cachain*](#https_cachain)
 * [*https\_certificate*](#https_certificate)
 * [*https\_private\_key*](#https_private_key)
@@ -373,6 +374,14 @@ System default is */etc/hue/cacerts.pem*.
 Certificate file in PEM format. Default: '/etc/grid-security/hostcert.pem'.
 
 The certificate file is copied into Hue configuration directory.
+
+####`https_hue`
+
+Enable support for https, but only in Hue web interface. Default: undef.
+
+If specified, this parameter will take precedence over *https* parameter for Hue web interface. All remote services are still used according to *https* parameter.
+
+Using *https_hue* set to **true**, it is possible to have unsecured Hadoop cluster, but with secured Hue web GUI endpoint. See also *desktop.secure_hsts_seconds* Hue property in [Enable Security](#enable-security).
 
 ####`https_private_key`
 

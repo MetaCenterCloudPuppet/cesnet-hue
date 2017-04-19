@@ -25,6 +25,7 @@ class hue (
   $https = false,
   $https_cachain = undef,
   $https_certificate = '/etc/grid-security/hostcert.pem',
+  $https_hue = undef,
   $https_private_key = '/etc/grid-security/hostkey.pem',
   $https_passphrase = undef,
   $keytab_hue = '/etc/security/keytab/hue.service.keytab',
@@ -125,7 +126,12 @@ class hue (
   } else {
     $security_properties = {}
   }
-  if $https {
+  if $https_hue == undef and !("" in [$https_hue]) {
+    $_https_hue = $https
+  } else {
+    $_https_hue = $https_hue
+  }
+  if $_https_hue {
     $_https_certificate = "${hue::confdir}/hostcert.pem"
     $_https_private_key = "${hue::confdir}/hostkey.pem"
     $https_base_properties = {
