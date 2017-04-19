@@ -126,7 +126,7 @@ class hue (
   } else {
     $security_properties = {}
   }
-  if $https_hue == undef and !("" in [$https_hue]) {
+  if $https_hue == undef and !('' in [$https_hue]) {
     $_https_hue = $https
   } else {
     $_https_hue = $https_hue
@@ -289,8 +289,8 @@ class hue (
   $_packages = concat($db_packages, $::hue::package_name)
   $_properties = merge($base_properties, $db_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
-  class { '::hue::install': } ->
-  class { '::hue::config': } ~>
-  class { '::hue::service': } ->
-  Class['::hue']
+  class { '::hue::install': }
+  -> class { '::hue::config': }
+  ~> class { '::hue::service': }
+  -> Class['::hue']
 }
