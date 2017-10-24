@@ -14,6 +14,7 @@ class hue (
   $zookeeper_hostnames = [],
   $zookeeper_rest_hostname = undef,
   $alternatives = '::default',
+  $auth = undef,
   $db = undef,
   $db_host = 'localhost',
   $db_user = 'hue',
@@ -29,6 +30,7 @@ class hue (
   $https_private_key = '/etc/grid-security/hostkey.pem',
   $https_passphrase = undef,
   $keytab_hue = '/etc/security/keytab/hue.service.keytab',
+  $keytab_spnego = '/etc/security/keytab/hue-http.service.keytab',
   $package_name = $::hue::params::package_name,
   $service_name = $::hue::params::service_name,
   $properties = undef,
@@ -119,7 +121,7 @@ class hue (
   if $realm and !empty($realm) {
     $security_properties = {
       'desktop.kerberos.hue_keytab' => $keytab_hue,
-      'desktop.kerberos.hue_pricipal' => "hue/${::fqdn}@${realm}",
+      'desktop.kerberos.hue_principal' => "hue/${::fqdn}@${realm}",
       'desktop.kerberos.kinit_path' => '/usr/bin/kinit',
       'hadoop.hdfs_clusters.default.security_enabled' => $security_enabled,
     }
@@ -285,9 +287,35 @@ class hue (
     $zoo_properties = {}
   }
 
-  $_environment = merge({}, $environment)
+  case $auth {
+    'saml': {
+      $auth_env = {}
+      $auth_properties = {
+        'desktop.auth.backend'  => 'libsaml.backend.SAML2Backend',
+        'libsaml.cert_file'     => "${hue::confdir}/hostcert.pem",
+        'libsaml.key_file'      => "${hue::confdir}/hostkey.pem",
+        #'libsaml.metadata_file' => '/etc/hue/saml-metadata.xml',
+        'libsaml.xmlsec_binary' => '/usr/bin/xmlsec1',
+      }
+    }
+    'spnego': {
+      $_keytab_spnego = '/etc/hue/hue-http.service.keytab'
+      $auth_env = {
+        'KRB5_KTNAME' => $_keytab_spnego,
+      }
+      $auth_properties = {
+        'desktop.auth.backend' => 'desktop.auth.backend.SpnegoDjangoBackend',
+      }
+    }
+    default: {
+      $auth_env = {}
+      $auth_properties = {}
+    }
+  }
+
+  $_environment = merge($auth_env, $environment)
   $_packages = concat($db_packages, $::hue::package_name)
-  $_properties = merge($base_properties, $db_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
+  $_properties = merge($base_properties, $auth_properties, $db_properties, $security_properties, $https_properties, $hdfs_properties, $hive_properties, $impala_properties, $oozie_properties, $yarn_properties, $zoo_properties, $properties)
 
   class { '::hue::install': }
   -> class { '::hue::config': }

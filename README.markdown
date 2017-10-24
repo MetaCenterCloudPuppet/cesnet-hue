@@ -12,7 +12,8 @@
     * [Basic cluster usage](#basic-cluster-usage)
     * [High availability cluster usage](#high-availability-cluster-usage)
     * [Enable security](#enable-security)
-    * [Enable SPNEGO authentization](#enable-spnego-authentization)
+    * [SPNEGO authentization](#spnego-authentization)
+    * [SAML authentization](#saml-authentization)
     * [MySQL backend](#mysql-backend)
     * [PostgreSQL backend](#postgresql-backend)
 4. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
@@ -37,6 +38,7 @@ Installs Apache Hue - web user interface for Hadoop environment.
  * */etc/security/keytab/hue.service.keytab* ownership changed (only when security is enabled, the path can be changed by *keytab_hue* parameter)
  * */etc/grid-security/hostcert.pem* copied to */etc/hue/conf/* (only with *https*)
  * */etc/grid-security/hostkey.pem* copied to */etc/hue/conf/* (only with *https*)
+ * */etc/security/keytab/hue-http.service.keytab* copied to */etc/hue/conf/* (only with *spnego* authorization)
  * when using external database, the import logs in */var/lib/hue/logs/* are kept
 * Helper files:
  * */var/lib/hue/.puppet-init1-syncdb*
@@ -168,26 +170,57 @@ Default credential files locations:
 
 By default *strict-transport-security* is explicitly disabled by this puppet module, so other services are not disrupted. Use *desktop.secure_hsts_seconds* to enable it (default value used by *hue* is **31536000**).
 
-### Enable SPNEGO authentization
+### SPNEGO authentization
 
 You can authenticate over HTTPS using Kerberos ticket.
 
-For that is needed kerberos keytab with principals (replace *HOSTNAME* and *REALM* by real values):
+For that is needed kerberos keytab placed in */etc/security/keytabs/hue-http.service.keytab* with principals (replace *HOSTNAME* and *REALM* by real values):
 
 * hue/*HOSTNAME*@*REALM*
 * HTTP/*HOSTNAME*@*REALM*
 
-You will need to set *KRB5\_KTNAME* in *environment* parameter.
-
-Also you will need to set the auth backend to *desktop.auth.backend.SpnegoDjangoBackend*.
+You will need to set *auth* parameter to **spnego** (or set everything manually: *KRB5\_KTNAME* environment, and *deskop.auth* property).
 
 **Example** (hiera yaml format):
+
+    hue::auth: spnego
+    #(default)hue::keytab_hue: /etc/security/keytab/hue.service.keytab
+    #(default)hue::keytab_spnego: /etc/security/keytab/hue-http.service.keytab
+
+**Example (manually)** (hiera yaml format):
 
     hue::environment:
      KRB5_KTNAME:  /etc/security/keytab/hue-http.service.keytab
     hue::keytab_hue: /etc/security/keytab/hue.service.keytab
     hue::properties:
      desktop.auth.backend: desktop.auth.backend.SpnegoDjangoBackend
+
+### SAML authentization
+
+SAML is SSO authentization used for example in federated environments.
+
+For SAML there is needed:
+
+* metadata file from Identity Provider (*libsaml.metadata_file* property)
+* SSL certificates (see [Enable Security](#enable-security))
+* permitted redirection for used IdP (*desktop.redirect_whitelist* property)
+* *xmlsec1* utility on ALL nodes in Hadoop cluster
+
+**Example** (hiera yaml format):
+
+    hue::auth: saml
+    hue::properties:
+      desktop.redirect_whitelist: ^\/.$,^https:\/\/idp.example.com\/.$
+      libsaml.metadata_file: /opt/my-idp-saml-metadata.xml
+
+**Example (manually)** (hiera yaml format):
+
+   hue::properties:
+     desktop.redirect_whitelist: ^\/.$,^https:\/\/idp.example.com\/.$
+     libsaml.metadata_file: /opt/my-idp-saml-metadata.xml
+     libsaml.cert_file: /etc/hue/conf/hostcert.pem
+     libsaml.key_file: /etc/hue/conf/hostkey.pem
+     libsaml.xmlsec_binary: /usr/bin/xmlsec1
 
 ### MySQL backend
 
@@ -267,10 +300,23 @@ The main deployment class.
 
 ####`alternatives`
 
-Switches the alternatives used for the configuration. Default: 'cluster' (Debian
-) or undef.
+Switches the alternatives used for the configuration. Default: 'cluster' (Debian) or undef.
 
 It can be used only when supported (for example with Cloudera distribution).
+
+####`auth`
+
+Authorization backend. Default: undef
+
+Values:
+
+* `undef` (default): default Hue authorizaction, local passwords
+* **saml**: SAML authorization backend
+* **spnego**: GSS-API negotiation mechanism
+
+See also:
+* *keytab_spnego*
+* *properties*: libsaml.\*
 
 ####`db`
 

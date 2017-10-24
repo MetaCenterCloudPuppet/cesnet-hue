@@ -41,4 +41,13 @@ class hue::config {
       source => $hue::https_private_key,
     }
   }
+
+  if $hue::auth == 'spnego' {
+    file { $hue::_keytab_spnego:
+      owner  => 'hue',
+      group  => 'hue',
+      mode   => '0400',
+      source => $hue::keytab_spnego,
+    }
+  }
 }
