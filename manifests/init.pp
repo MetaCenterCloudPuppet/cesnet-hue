@@ -320,5 +320,5 @@ class hue (
   class { '::hue::install': }
   -> class { '::hue::config': }
   ~> class { '::hue::service': }
-  -> Class['::hue']
+  -> Class['hue']
 }
