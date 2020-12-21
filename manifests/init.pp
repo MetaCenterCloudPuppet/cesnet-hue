@@ -39,7 +39,6 @@ class hue (
 ) inherits ::hue::params {
   include ::stdlib
 
-  validate_array($zookeeper_hostnames)
   if (!$hdfs_hostname or empty($hdfs_hostname)) {
     if (!$defaultFS or empty($defaultFS)) {
       fail('$hdfs_hostname or $defaultFS parameter is required')
